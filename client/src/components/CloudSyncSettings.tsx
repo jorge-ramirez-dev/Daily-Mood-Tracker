@@ -1,6 +1,8 @@
+import { useEffect } from "react";
 import { useCloudSync } from "../hooks/useCloudSync";
 import type { TEntriesMap } from "../utils/types";
 import type { TSyncStatus } from "../lib/storage/types";
+import { preloadGoogleScripts } from "../lib/storage/googleDrive";
 
 type TProps = {
   entries: TEntriesMap;
@@ -10,6 +12,10 @@ type TProps = {
 export function CloudSyncSettings({ entries, setEntries }: TProps) {
   const { provider, status, lastSyncTime, error, connect, disconnect, sync, isConnected } =
     useCloudSync(entries, setEntries);
+
+  useEffect(() => {
+    preloadGoogleScripts();
+  }, []);
 
   return (
     <div className="cloud-sync">

@@ -8,6 +8,47 @@ const DATA_FILE_NAME = "mood-tracker-data.json";
 const TOKEN_KEY = "mood-tracker.google.token";
 const TOKEN_EXPIRY_KEY = "mood-tracker.google.expiry";
 
+const loadGisScript = (): Promise<void> =>
+  new Promise((resolve, reject) => {
+    if (typeof google !== "undefined" && google.accounts) {
+      resolve();
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.onload = () => resolve();
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+
+const loadGapiScript = (): Promise<void> =>
+  new Promise((resolve, reject) => {
+    if (typeof gapi !== "undefined" && gapi.client) {
+      resolve();
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://apis.google.com/js/api.js";
+    script.onload = () => {
+      gapi.load("client", async () => {
+        await gapi.client.init({});
+        await gapi.client.load("drive", "v3");
+        resolve();
+      });
+    };
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+
+let scriptsLoaded = false;
+
+export const preloadGoogleScripts = async (): Promise<void> => {
+  if (scriptsLoaded) return;
+  await loadGisScript();
+  await loadGapiScript();
+  scriptsLoaded = true;
+};
+
 export function createGoogleDriveProvider(): TStorageProvider {
   let accessToken: string | null = null;
   let tokenClient: google.accounts.oauth2.TokenClient | null = null;
@@ -18,38 +59,6 @@ export function createGoogleDriveProvider(): TStorageProvider {
   if (storedToken && expiry && Date.now() < parseInt(expiry)) {
     accessToken = storedToken;
   }
-
-  const loadGisScript = (): Promise<void> =>
-    new Promise((resolve, reject) => {
-      if (typeof google !== "undefined" && google.accounts) {
-        resolve();
-        return;
-      }
-      const script = document.createElement("script");
-      script.src = "https://accounts.google.com/gsi/client";
-      script.onload = () => resolve();
-      script.onerror = reject;
-      document.head.appendChild(script);
-    });
-
-  const loadGapiScript = (): Promise<void> =>
-    new Promise((resolve, reject) => {
-      if (typeof gapi !== "undefined" && gapi.client) {
-        resolve();
-        return;
-      }
-      const script = document.createElement("script");
-      script.src = "https://apis.google.com/js/api.js";
-      script.onload = () => {
-        gapi.load("client", async () => {
-          await gapi.client.init({});
-          await gapi.client.load("drive", "v3");
-          resolve();
-        });
-      };
-      script.onerror = reject;
-      document.head.appendChild(script);
-    });
 
   const findDataFile = async (): Promise<string | null> => {
     const response = await gapi.client.drive.files.list({
@@ -68,8 +77,7 @@ export function createGoogleDriveProvider(): TStorageProvider {
     isConnected: () => accessToken !== null,
 
     connect: async () => {
-      await loadGisScript();
-      await loadGapiScript();
+      await preloadGoogleScripts();
 
       return new Promise((resolve, reject) => {
         tokenClient = google.accounts.oauth2.initTokenClient({
