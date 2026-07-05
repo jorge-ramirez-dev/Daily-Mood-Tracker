@@ -30,6 +30,7 @@ export function CloudSyncSettings({ entries, setEntries }: TProps) {
               <GoogleDriveIcon />
               Connect Google Drive
             </button>
+            {/* TODO: re-enable once Dropbox OAuth callback is implemented
             <button
               type="button"
               className="cloud-sync__provider-btn"
@@ -38,6 +39,7 @@ export function CloudSyncSettings({ entries, setEntries }: TProps) {
               <DropboxIcon />
               Connect Dropbox
             </button>
+            */}
           </div>
         </div>
       ) : (
