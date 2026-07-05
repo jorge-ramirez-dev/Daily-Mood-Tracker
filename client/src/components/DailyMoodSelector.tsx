@@ -1,10 +1,10 @@
 import type { CSSProperties } from "react";
-import type { MoodConfig, MoodKey } from "../constants/moods";
+import type { TMoodConfig, TMoodKey } from "../constants/moods";
 
 type TProps = {
-  moods: readonly MoodConfig[];
-  selectedMood: MoodKey | null;
-  onSelect: (mood: MoodKey) => void;
+  moods: readonly TMoodConfig[];
+  selectedMood: TMoodKey | null;
+  onSelect: (mood: TMoodKey) => void;
 };
 
 const SelectorButtons = ({ moods, selectedMood, onSelect }: TProps) => (
@@ -29,15 +29,15 @@ const SelectorButtons = ({ moods, selectedMood, onSelect }: TProps) => (
   </div>
 );
 
-type DailyMoodSelectorProps = {
-  moods: readonly MoodConfig[];
-  primaryMood: MoodKey | null;
-  secondaryMood: MoodKey | null;
+type TDailyMoodSelectorProps = {
+  moods: readonly TMoodConfig[];
+  primaryMood: TMoodKey | null;
+  secondaryMood: TMoodKey | null;
   isDual: boolean;
   isTodaySelection: boolean;
   note: string | null;
-  onSelectPrimary: (mood: MoodKey) => void;
-  onSelectSecondary: (mood: MoodKey) => void;
+  onSelectPrimary: (mood: TMoodKey) => void;
+  onSelectSecondary: (mood: TMoodKey) => void;
   onToggleDual: (checked: boolean) => void;
   onNoteChange: (note: string) => void;
   selectedDateLabel: string;
@@ -55,7 +55,7 @@ export const DailyMoodSelector = ({
   onToggleDual,
   onNoteChange,
   selectedDateLabel,
-}: DailyMoodSelectorProps) => (
+}: TDailyMoodSelectorProps) => (
   <section className="selector">
     <p className="selector__eyebrow">{isTodaySelection ? `Today · ${selectedDateLabel}` : selectedDateLabel}</p>
     <h1 className="selector__title">

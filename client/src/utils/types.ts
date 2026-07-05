@@ -1,22 +1,22 @@
-import { MonthLabel, MoodKey } from "../constants/moods";
+import { TMonthLabel, TMoodKey } from "../constants/moods";
 
-export type StoredEntry =
+export type TStoredEntry =
   | null
-  | MoodKey
+  | TMoodKey
   | {
-      first?: MoodKey | null;
-      second?: MoodKey | null;
-      primary?: MoodKey | null;
-      secondary?: MoodKey | null;
-      mood?: MoodKey | null;
+      first?: TMoodKey | null;
+      second?: TMoodKey | null;
+      primary?: TMoodKey | null;
+      secondary?: TMoodKey | null;
+      mood?: TMoodKey | null;
       note?: string | null;
     };
 
-export type NormalizedEntry = { first: MoodKey | null; second: MoodKey | null; note: string | null } | null;
+export type TNormalizedEntry = { first: TMoodKey | null; second: TMoodKey | null; note: string | null } | null;
 
-export type AggregatedRow = {
-  month: MonthLabel;
+export type TAggregatedRow = {
+  month: TMonthLabel;
   monthIndex: number;
-} & Record<MoodKey, number>;
+} & Record<TMoodKey, number>;
 
-export type EntriesMap = Record<string, StoredEntry>;
+export type TEntriesMap = Record<string, TStoredEntry>;

@@ -1,11 +1,11 @@
-type YearSelectorProps = {
+type TYearSelectorProps = {
   selectedYear: number;
   availableYears: number[];
   currentYear: number;
   onYearChange: (year: number) => void;
 };
 
-export const YearSelector = ({ selectedYear, availableYears, currentYear, onYearChange }: YearSelectorProps) => {
+export const YearSelector = ({ selectedYear, availableYears, currentYear, onYearChange }: TYearSelectorProps) => {
   if (availableYears.length <= 1) {
     return null;
   }

@@ -1,30 +1,30 @@
-import type { MoodKey } from "../constants/moods";
+import type { TMoodKey } from "../constants/moods";
 import { MOODS, MONTHS } from "../constants/moods";
-import type { AggregatedRow, NormalizedEntry, StoredEntry } from "./types";
+import type { TAggregatedRow, TNormalizedEntry, TStoredEntry } from "./types";
 
-const baseMoodCounts = MOODS.reduce<Record<MoodKey, number>>((acc, mood) => {
+const baseMoodCounts = MOODS.reduce<Record<TMoodKey, number>>((acc, mood) => {
   acc[mood.key] = 0;
   return acc;
-}, {} as Record<MoodKey, number>);
+}, {} as Record<TMoodKey, number>);
 
-const buildEmptyYear = (): AggregatedRow[] =>
+const buildEmptyYear = (): TAggregatedRow[] =>
   MONTHS.map((month, monthIndex) => ({
     month,
     monthIndex,
     ...baseMoodCounts,
   }));
 
-export const normalizeEntry = (value: StoredEntry): NormalizedEntry => {
+export const normalizeEntry = (value: TStoredEntry): TNormalizedEntry => {
   if (!value) return null;
   const isString = typeof value === "string";
   const isObject = typeof value === "object";
 
   if (isString) {
-    return { first: value as MoodKey, second: null, note: null };
+    return { first: value as TMoodKey, second: null, note: null };
   }
   if (isObject) {
-    const first = (value.first ?? value.primary ?? value.mood ?? null) as MoodKey | null;
-    const second = (value.second ?? value.secondary ?? null) as MoodKey | null;
+    const first = (value.first ?? value.primary ?? value.mood ?? null) as TMoodKey | null;
+    const second = (value.second ?? value.secondary ?? null) as TMoodKey | null;
     const note = value.note ?? null;
     if (!first && second) {
       return { first: second, second: null, note };
@@ -38,7 +38,7 @@ export const normalizeEntry = (value: StoredEntry): NormalizedEntry => {
   return null;
 };
 
-export const serializeEntry = ({ first, second, note }: { first: MoodKey | null; second: MoodKey | null; note: string | null }): StoredEntry => {
+export const serializeEntry = ({ first, second, note }: { first: TMoodKey | null; second: TMoodKey | null; note: string | null }): TStoredEntry => {
   if (!first && !note) return null;
 
   // Note-only entry (no mood yet)
@@ -54,14 +54,14 @@ export const serializeEntry = ({ first, second, note }: { first: MoodKey | null;
   return { first, second };
 };
 
-const addMoodCount = (row: AggregatedRow, moodKey: MoodKey | null, weight: number) => {
+const addMoodCount = (row: TAggregatedRow, moodKey: TMoodKey | null, weight: number) => {
   if (!moodKey) return;
   if (!Object.prototype.hasOwnProperty.call(row, moodKey)) return;
   const nextValue = (row[moodKey] ?? 0) + weight;
   row[moodKey] = Math.round(nextValue * 100) / 100;
 };
 
-export const aggregateYearData = (entries: Record<string, StoredEntry> = {}, year = new Date().getFullYear()) => {
+export const aggregateYearData = (entries: Record<string, TStoredEntry> = {}, year = new Date().getFullYear()) => {
   const template = buildEmptyYear();
 
   Object.entries(entries).forEach(([dateKey, moodValue]) => {
@@ -86,4 +86,4 @@ export const aggregateYearData = (entries: Record<string, StoredEntry> = {}, yea
   return template;
 };
 
-export const hasYearData = (data: AggregatedRow[] = []) => data.some((row) => MOODS.some((mood) => row[mood.key] > 0));
+export const hasYearData = (data: TAggregatedRow[] = []) => data.some((row) => MOODS.some((mood) => row[mood.key] > 0));

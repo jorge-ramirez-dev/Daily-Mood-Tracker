@@ -1,6 +1,6 @@
 import { Fragment, useMemo } from "react";
-import { MOODS, type MoodKey } from "../constants/moods";
-import type { AggregatedRow } from "../utils/types";
+import { MOODS, type TMoodKey } from "../constants/moods";
+import type { TAggregatedRow } from "../utils/types";
 
 const formatValue = (value: number) => {
   if (Number.isInteger(value)) return value.toString();
@@ -36,14 +36,14 @@ const getSolidColor = (hex: string) => {
 const daysInMonth = (year: number, monthIndex: number) => new Date(year, monthIndex + 1, 0).getDate();
 
 type TProps = {
-  data: AggregatedRow[];
+  data: TAggregatedRow[];
   year: number;
 };
 
 export const MonthlyMoodAccumulation = ({ data, year }: TProps) => {
   const monthLengths = useMemo(() => data.map((row) => daysInMonth(year, row.monthIndex)), [data, year]);
   const totals = useMemo(() => {
-    const sums = {} as Record<MoodKey, number>;
+    const sums = {} as Record<TMoodKey, number>;
     MOODS.forEach((mood) => {
       sums[mood.key] = data.reduce((sum, row) => sum + row[mood.key], 0);
     });

@@ -1,9 +1,9 @@
 import { MOODS } from "../constants/moods";
 import { MOOD_WEIGHTS } from "../constants/moodWeights";
-import type { AggregatedRow } from "../utils/types";
+import type { TAggregatedRow } from "../utils/types";
 
 type TProps = {
-  data: AggregatedRow[];
+  data: TAggregatedRow[];
   totalDaysTracked: number;
   year: number;
 };

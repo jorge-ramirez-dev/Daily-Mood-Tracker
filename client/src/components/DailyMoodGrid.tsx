@@ -1,36 +1,36 @@
 import { useMemo, type CSSProperties } from "react";
-import { MOODS, MONTHS, type MoodKey, type MonthLabel } from "../constants/moods";
-import type { NormalizedEntry, StoredEntry } from "../utils/types";
+import { MOODS, MONTHS, type TMoodKey, type TMonthLabel } from "../constants/moods";
+import type { TNormalizedEntry, TStoredEntry } from "../utils/types";
 import { normalizeEntry } from "../utils/data";
 
-type Orientation = "months-first" | "days-first";
+type TOrientation = "months-first" | "days-first";
 
-type DayCell = {
+type TDayCell = {
   day: number;
   dateKey: string | null;
   isDisabled: boolean;
-  firstMoodKey: MoodKey | null;
-  secondMoodKey: MoodKey | null;
+  firstMoodKey: TMoodKey | null;
+  secondMoodKey: TMoodKey | null;
   hasNote: boolean;
   isToday: boolean;
 };
 
-type MonthData = {
-  month: MonthLabel;
-  days: DayCell[];
+type TMonthData = {
+  month: TMonthLabel;
+  days: TDayCell[];
 };
 
 type TProps = {
-  entries: Record<string, StoredEntry>;
+  entries: Record<string, TStoredEntry>;
   year: number;
   todayKey: string;
-  orientation?: Orientation;
+  orientation?: TOrientation;
   selectedDateKey?: string;
   onSelectDate?: (dateKey: string) => void;
 };
 
-const colorMap: Record<MoodKey, string> = Object.fromEntries(MOODS.map((mood) => [mood.key, mood.color])) as Record<
-  MoodKey,
+const colorMap: Record<TMoodKey, string> = Object.fromEntries(MOODS.map((mood) => [mood.key, mood.color])) as Record<
+  TMoodKey,
   string
 >;
 
@@ -43,8 +43,8 @@ const buildDay = (
   monthIndex: number,
   dayNumber: number,
   todayKey: string,
-  entry: NormalizedEntry
-): DayCell => {
+  entry: TNormalizedEntry
+): TDayCell => {
   const dateKey = `${year}-${pad(monthIndex + 1)}-${pad(dayNumber)}`;
   return {
     day: dayNumber,
@@ -65,11 +65,11 @@ export const DailyMoodGrid = ({
   selectedDateKey,
   onSelectDate,
 }: TProps) => {
-  const months = useMemo<MonthData[]>(
+  const months = useMemo<TMonthData[]>(
     () =>
       MONTHS.map((month, monthIndex) => {
         const limit = daysInMonth(year, monthIndex);
-        const days: DayCell[] = Array.from({ length: 31 }, (_, dayIndex) => {
+        const days: TDayCell[] = Array.from({ length: 31 }, (_, dayIndex) => {
           const dayNumber = dayIndex + 1;
           if (dayNumber > limit) {
             return {
@@ -93,7 +93,7 @@ export const DailyMoodGrid = ({
     [entries, year, todayKey]
   );
 
-  const renderCell = (monthLabel: MonthLabel, day: DayCell) => {
+  const renderCell = (monthLabel: TMonthLabel, day: TDayCell) => {
     const primaryColor = day.firstMoodKey ? colorMap[day.firstMoodKey] : "transparent";
     const secondaryColor =
       day.secondMoodKey && day.secondMoodKey !== day.firstMoodKey ? colorMap[day.secondMoodKey] : null;

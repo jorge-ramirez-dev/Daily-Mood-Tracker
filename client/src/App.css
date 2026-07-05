@@ -940,6 +940,144 @@
   }
 }
 
+/* ── Cloud Sync Settings ── */
+.cloud-sync {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  box-shadow: 0 15px 45px var(--surface-shadow);
+}
+
+.cloud-sync__title {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.cloud-sync__description {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.cloud-sync__providers {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cloud-sync__provider-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 1rem;
+  background: var(--surface-muted);
+  border: 1px solid var(--surface-border);
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.cloud-sync__provider-btn:hover {
+  background: var(--surface-subtle);
+  border-color: var(--surface-border-strong);
+}
+
+.cloud-sync__status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.cloud-sync__provider-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.cloud-sync__badge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+}
+
+.cloud-sync__badge--idle    { background: var(--surface-subtle); color: var(--text-muted); }
+.cloud-sync__badge--syncing { background: #dbeafe; color: #1d4ed8; }
+.cloud-sync__badge--synced  { background: #dcfce7; color: #15803d; }
+.cloud-sync__badge--error   { background: #fee2e2; color: #b91c1c; }
+
+.cloud-sync__last-sync {
+  font-size: 0.75rem;
+  color: var(--text-soft);
+  margin: 0 0 0.75rem;
+}
+
+.cloud-sync__error {
+  font-size: 0.8125rem;
+  color: #b91c1c;
+  margin: 0 0 0.75rem;
+}
+
+.cloud-sync__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.cloud-sync__sync-btn {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  background: #111827;
+  color: #fff;
+  border: none;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.cloud-sync__sync-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cloud-sync__disconnect-btn {
+  padding: 0.5rem 1rem;
+  background: var(--surface-muted);
+  border: 1px solid var(--surface-border);
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.cloud-sync__disconnect-btn:hover {
+  background: var(--surface-subtle);
+}
+
+@media (prefers-color-scheme: dark) {
+  .cloud-sync__badge--syncing { background: rgba(29, 78, 216, 0.25); color: #93c5fd; }
+  .cloud-sync__badge--synced  { background: rgba(21, 128, 61, 0.25); color: #86efac; }
+  .cloud-sync__badge--error   { background: rgba(185, 28, 28, 0.25); color: #fca5a5; }
+
+  .cloud-sync__sync-btn {
+    background: #e2e8f0;
+    color: #0f172a;
+  }
+}
+
+/* ─────────────────────────────────────────────── */
+
 @media (prefers-color-scheme: dark) {
   :root {
     --page-bg: radial-gradient(circle at top, #0f172a 0%, #0b1324 60%, #020617 100%);

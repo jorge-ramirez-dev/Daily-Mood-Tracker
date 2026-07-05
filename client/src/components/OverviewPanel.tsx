@@ -4,15 +4,15 @@ import { InsightPills } from "./InsightPills";
 import { MonthlyMoodAccumulation } from "./MonthlyMoodAccumulation";
 import { MonthlyMoodChart } from "./MonthlyMoodChart";
 import { DailyMoodGrid } from "./DailyMoodGrid";
-import type { AggregatedRow, StoredEntry } from "../utils/types";
+import type { TAggregatedRow, TStoredEntry } from "../utils/types";
 import { hasYearData } from "../utils/data";
 
-type Orientation = "months-first" | "days-first";
+type TOrientation = "months-first" | "days-first";
 
 type TProps = {
-  data: AggregatedRow[];
+  data: TAggregatedRow[];
   totalDaysTracked: number;
-  entries: Record<string, StoredEntry>;
+  entries: Record<string, TStoredEntry>;
   year: number;
   todayKey: string;
   selectedDateKey: string;
@@ -28,7 +28,7 @@ export const OverviewPanel = ({
   selectedDateKey,
   onSelectDate,
 }: TProps) => {
-  const [orientation, setOrientation] = useState<Orientation>("months-first");
+  const [orientation, setOrientation] = useState<TOrientation>("months-first");
   const hasData = hasYearData(data);
   const toggleOrientation = () => setOrientation((prev) => (prev === "months-first" ? "days-first" : "months-first"));
   const toggleLabel = orientation === "months-first" ? "Switch to 31×12" : "Switch to 12×31";

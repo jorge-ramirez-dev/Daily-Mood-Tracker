@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 
-interface ConfirmModalProps {
+type TConfirmModalProps = {
   isOpen: boolean;
   title: string;
   message: string;
@@ -9,7 +9,7 @@ interface ConfirmModalProps {
   cancelLabel?: string;
   onConfirm: () => void;
   onCancel: () => void;
-}
+};
 
 export const ConfirmModal = ({
   isOpen,
@@ -19,7 +19,7 @@ export const ConfirmModal = ({
   cancelLabel = "Cancel",
   onConfirm,
   onCancel,
-}: ConfirmModalProps) => {
+}: TConfirmModalProps) => {
   const confirmButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {

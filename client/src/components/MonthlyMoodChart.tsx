@@ -1,23 +1,23 @@
 import { useMemo } from "react";
 import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Bar } from "recharts";
-import { MOODS, type MoodKey } from "../constants/moods";
-import type { AggregatedRow } from "../utils/types";
+import { MOODS, type TMoodKey } from "../constants/moods";
+import type { TAggregatedRow } from "../utils/types";
 
-type StackedBarDatum = {
+type TStackedBarDatum = {
   month: string;
-} & Record<MoodKey, number>;
+} & Record<TMoodKey, number>;
 
-const toStackedBarData = (yearData: AggregatedRow[]): StackedBarDatum[] =>
+const toStackedBarData = (yearData: TAggregatedRow[]): TStackedBarDatum[] =>
   yearData.map((row) => ({
     month: row.month,
-    ...MOODS.reduce<Record<MoodKey, number>>((acc, mood) => {
+    ...MOODS.reduce<Record<TMoodKey, number>>((acc, mood) => {
       acc[mood.key] = row[mood.key];
       return acc;
-    }, {} as Record<MoodKey, number>),
+    }, {} as Record<TMoodKey, number>),
   }));
 
 type TProps = {
-  data: AggregatedRow[];
+  data: TAggregatedRow[];
 };
 
 export const MonthlyMoodChart = ({ data }: TProps) => {

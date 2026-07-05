@@ -7,7 +7,7 @@ export const MOODS = [
   { key: "Bad", color: "#ef4444" },
   { key: "Awful", color: "#000000" },
 ] as const;
-export type MonthLabel = (typeof MONTHS)[number];
+export type TMonthLabel = (typeof MONTHS)[number];
 
-export type MoodKey = (typeof MOODS)[number]["key"];
-export type MoodConfig = (typeof MOODS)[number];
+export type TMoodKey = (typeof MOODS)[number]["key"];
+export type TMoodConfig = (typeof MOODS)[number];
