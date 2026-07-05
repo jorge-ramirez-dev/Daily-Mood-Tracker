@@ -76,8 +76,10 @@ export function createGoogleDriveProvider(): TStorageProvider {
 
     isConnected: () => accessToken !== null,
 
-    connect: async () => {
-      await preloadGoogleScripts();
+    connect: () => {
+      if (!scriptsLoaded) {
+        return Promise.reject(new Error("Google scripts still loading. Please try again."));
+      }
 
       return new Promise((resolve, reject) => {
         tokenClient = google.accounts.oauth2.initTokenClient({
@@ -94,6 +96,9 @@ export function createGoogleDriveProvider(): TStorageProvider {
             localStorage.setItem(TOKEN_EXPIRY_KEY, expiryTime.toString());
             gapi.client.setToken({ access_token: response.access_token });
             resolve();
+          },
+          error_callback: (error) => {
+            reject(new Error(error.message || "Failed to open Google sign-in popup"));
           },
         });
         tokenClient.requestAccessToken();
