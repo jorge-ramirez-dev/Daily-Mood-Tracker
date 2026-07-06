@@ -1029,13 +1029,13 @@
 .cloud-sync__actions {
   display: flex;
   gap: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
-.cloud-sync__sync-btn {
+.cloud-sync__backup-btn,
+.cloud-sync__restore-btn {
   flex: 1;
   padding: 0.5rem 1rem;
-  background: #111827;
-  color: #fff;
   border: none;
   border-radius: 0.75rem;
   font-size: 0.875rem;
@@ -1044,14 +1044,27 @@
   transition: opacity 0.15s ease;
 }
 
-.cloud-sync__sync-btn:disabled {
+.cloud-sync__backup-btn {
+  background: #111827;
+  color: #fff;
+}
+
+.cloud-sync__restore-btn {
+  background: var(--surface-muted);
+  border: 1px solid var(--surface-border);
+  color: var(--text-primary);
+}
+
+.cloud-sync__backup-btn:disabled,
+.cloud-sync__restore-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
 .cloud-sync__disconnect-btn {
+  width: 100%;
   padding: 0.5rem 1rem;
-  background: var(--surface-muted);
+  background: transparent;
   border: 1px solid var(--surface-border);
   border-radius: 0.75rem;
   font-size: 0.875rem;
@@ -1070,7 +1083,7 @@
   .cloud-sync__badge--synced  { background: rgba(21, 128, 61, 0.25); color: #86efac; }
   .cloud-sync__badge--error   { background: rgba(185, 28, 28, 0.25); color: #fca5a5; }
 
-  .cloud-sync__sync-btn {
+  .cloud-sync__backup-btn {
     background: #e2e8f0;
     color: #0f172a;
   }
