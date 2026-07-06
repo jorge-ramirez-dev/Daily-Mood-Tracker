@@ -1,7 +1,9 @@
 import type { TStorageProvider } from "./types";
 import type { TEntriesMap } from "../../utils/types";
 
-const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string;
+// Trimmed: a stray space in the env var URL-encodes into the auth request and
+// makes Google reject the client_id with invalid_client.
+const CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID as string)?.trim();
 const SCOPES = "https://www.googleapis.com/auth/drive.appdata";
 const DATA_FILE_NAME = "mood-tracker-data.json";
 const AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth";
