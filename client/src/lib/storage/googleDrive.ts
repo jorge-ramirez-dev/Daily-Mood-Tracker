@@ -116,6 +116,8 @@ export function createGoogleDriveProvider(): TStorageProvider {
 
     load: async () => {
       if (!accessToken) throw new Error("Not connected to Google Drive");
+      await preloadGoogleScripts();
+      gapi.client.setToken({ access_token: accessToken });
       const fileId = await findDataFile();
       if (!fileId) return {};
       const response = await gapi.client.drive.files.get({ fileId, alt: "media" });
@@ -125,6 +127,8 @@ export function createGoogleDriveProvider(): TStorageProvider {
 
     save: async (entries: TEntriesMap) => {
       if (!accessToken) throw new Error("Not connected to Google Drive");
+      await preloadGoogleScripts();
+      gapi.client.setToken({ access_token: accessToken });
       const content = JSON.stringify(entries);
       const fileId = await findDataFile();
 
