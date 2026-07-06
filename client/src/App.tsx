@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import "./App.css";
 import { MOODS, type TMoodKey } from "./constants/moods";
 import type { TEntriesMap, TNormalizedEntry } from "./utils/types";
@@ -23,14 +23,7 @@ import { parseDateKey } from "./utils/dateHelpers";
 import { SettingsMenu } from "./components/SettingsMenu";
 import { ConfirmModal } from "./components/ConfirmModal";
 import { CloudSyncSettings } from "./components/CloudSyncSettings";
-
-type TModalState = {
-  isOpen: boolean;
-  title: string;
-  message: string;
-  confirmLabel?: string;
-  cancelLabel?: string;
-};
+import { useConfirmModal } from "./hooks/useConfirmModal";
 
 const ENTRIES_STORAGE_KEY = "mood-tracker.daily.entries";
 const CURRENT_YEAR = new Date().getFullYear();
@@ -45,27 +38,7 @@ const App = () => {
   const [selectedYear, setSelectedYear] = useState(CURRENT_YEAR);
 
   const [showSync, setShowSync] = useState(false);
-  const [modal, setModal] = useState<TModalState>({ isOpen: false, title: "", message: "" });
-  const modalResolverRef = useRef<((value: boolean) => void) | null>(null);
-
-  const showConfirm = useCallback((title: string, message: string, confirmLabel?: string, cancelLabel?: string): Promise<boolean> => {
-    return new Promise((resolve) => {
-      modalResolverRef.current = resolve;
-      setModal({ isOpen: true, title, message, confirmLabel, cancelLabel });
-    });
-  }, []);
-
-  const handleModalConfirm = useCallback(() => {
-    modalResolverRef.current?.(true);
-    modalResolverRef.current = null;
-    setModal((prev) => ({ ...prev, isOpen: false }));
-  }, []);
-
-  const handleModalCancel = useCallback(() => {
-    modalResolverRef.current?.(false);
-    modalResolverRef.current = null;
-    setModal((prev) => ({ ...prev, isOpen: false }));
-  }, []);
+  const { modal, showConfirm, handleConfirm: handleModalConfirm, handleCancel: handleModalCancel } = useConfirmModal();
 
   useEffect(() => {
     const storage = typeof window === "undefined" ? null : window.localStorage;

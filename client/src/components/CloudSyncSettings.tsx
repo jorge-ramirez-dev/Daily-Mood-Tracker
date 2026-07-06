@@ -1,8 +1,11 @@
 import { useEffect } from "react";
 import { useCloudSync } from "../hooks/useCloudSync";
+import { useConfirmModal } from "../hooks/useConfirmModal";
+import { ConfirmModal } from "./ConfirmModal";
 import type { TEntriesMap } from "../utils/types";
 import type { TSyncStatus } from "../lib/storage/types";
 import { preloadGoogleScripts } from "../lib/storage/googleDrive";
+import { applyNoteConflictResolution, mergeEntries } from "../utils/appHelpers";
 
 type TProps = {
   entries: TEntriesMap;
@@ -10,12 +13,42 @@ type TProps = {
 };
 
 export function CloudSyncSettings({ entries, setEntries }: TProps) {
-  const { provider, status, lastSyncTime, error, connect, disconnect, sync, isConnected } =
-    useCloudSync(entries, setEntries);
+  const { provider, status, lastSyncTime, error, connect, disconnect, backup, restore, isConnected } =
+    useCloudSync(entries);
+  const { modal, showConfirm, handleConfirm, handleCancel } = useConfirmModal();
 
   useEffect(() => {
     preloadGoogleScripts();
   }, []);
+
+  const handleRestore = async () => {
+    const remoteEntries = await restore();
+    if (!remoteEntries) return;
+
+    const confirmRestore = await showConfirm(
+      "Restore from Drive",
+      `Merge ${Object.keys(remoteEntries).length} entries from Google Drive with your current data?`,
+      "Continue",
+      "Cancel"
+    );
+    if (!confirmRestore) return;
+
+    let { mergedEntries, noteConflicts } = mergeEntries(entries, remoteEntries);
+
+    for (const conflict of noteConflicts) {
+      const shouldOverwrite = await showConfirm(
+        "Note Conflict",
+        `Conflict on ${conflict.dateKey}:\n\nCurrent note:\n"${conflict.currentNote}"\n\nIncoming note:\n"${conflict.incomingNote}"`,
+        "Use Incoming",
+        "Keep Current"
+      );
+      if (shouldOverwrite) {
+        mergedEntries = applyNoteConflictResolution(mergedEntries, conflict.dateKey, conflict.incomingNote);
+      }
+    }
+
+    setEntries(mergedEntries);
+  };
 
   return (
     <div className="cloud-sync">
@@ -66,18 +99,36 @@ export function CloudSyncSettings({ entries, setEntries }: TProps) {
           <div className="cloud-sync__actions">
             <button
               type="button"
-              className="cloud-sync__sync-btn"
-              onClick={sync}
+              className="cloud-sync__backup-btn"
+              onClick={backup}
               disabled={status === "syncing"}
             >
-              {status === "syncing" ? "Syncing…" : "Sync Now"}
+              {status === "syncing" ? "Backing up…" : "Backup to Drive"}
             </button>
-            <button type="button" className="cloud-sync__disconnect-btn" onClick={disconnect}>
-              Disconnect
+            <button
+              type="button"
+              className="cloud-sync__restore-btn"
+              onClick={handleRestore}
+              disabled={status === "syncing"}
+            >
+              {status === "syncing" ? "Restoring…" : "Restore from Drive"}
             </button>
           </div>
+          <button type="button" className="cloud-sync__disconnect-btn" onClick={disconnect}>
+            Disconnect
+          </button>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={modal.isOpen}
+        title={modal.title}
+        message={modal.message}
+        confirmLabel={modal.confirmLabel}
+        cancelLabel={modal.cancelLabel}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
     </div>
   );
 }
