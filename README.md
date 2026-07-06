@@ -62,7 +62,7 @@ All data operations are accessible through the settings menu (hamburger icon in 
 
 Sync mood data across devices using your own cloud storage. Data is written directly to your personal Google Drive — it never passes through any intermediary server.
 
-- **Google Drive** — Authenticates via Google Identity Services (OAuth popup), stores data as `mood-tracker-data.json` in Drive's hidden `appDataFolder` (invisible in your Drive UI, scoped only to this app). Tokens persist in localStorage with expiry checking and automatic reconnection on reload.
+- **Google Drive** — Authenticates via Google's OAuth redirect flow (no popups, so it works reliably on mobile browsers and with strict cross-origin policies), stores data as `mood-tracker-data.json` in Drive's hidden `appDataFolder` (invisible in your Drive UI, scoped only to this app). Tokens persist in localStorage with expiry checking and automatic reconnection on reload.
 - **Dropbox** — Provider implemented with PKCE OAuth flow (currently disabled in the UI while the callback handler is being finalized).
 - **Backup to Drive** — Pushes your current local entries to Drive, overwriting the remote file.
 - **Restore from Drive** — Pulls the remote file and merges it with local entries using the same merge strategy as JSON restore, including per-note conflict resolution.

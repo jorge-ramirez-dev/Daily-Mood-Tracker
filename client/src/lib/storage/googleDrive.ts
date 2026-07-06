@@ -4,22 +4,12 @@ import type { TEntriesMap } from "../../utils/types";
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string;
 const SCOPES = "https://www.googleapis.com/auth/drive.appdata";
 const DATA_FILE_NAME = "mood-tracker-data.json";
+const AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth";
+const REVOKE_ENDPOINT = "https://oauth2.googleapis.com/revoke";
 
 const TOKEN_KEY = "mood-tracker.google.token";
 const TOKEN_EXPIRY_KEY = "mood-tracker.google.expiry";
-
-const loadGisScript = (): Promise<void> =>
-  new Promise((resolve, reject) => {
-    if (typeof google !== "undefined" && google.accounts) {
-      resolve();
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = "https://accounts.google.com/gsi/client";
-    script.onload = () => resolve();
-    script.onerror = reject;
-    document.head.appendChild(script);
-  });
+const OAUTH_STATE_KEY = "mood-tracker.google.oauth-state";
 
 const loadGapiScript = (): Promise<void> =>
   new Promise((resolve, reject) => {
@@ -44,14 +34,38 @@ let scriptsLoaded = false;
 
 export const preloadGoogleScripts = async (): Promise<void> => {
   if (scriptsLoaded) return;
-  await loadGisScript();
   await loadGapiScript();
   scriptsLoaded = true;
 };
 
+/**
+ * Detects a return from Google's OAuth redirect, validates the state nonce,
+ * and persists the access token from the URL fragment. Cleans the fragment
+ * from the address bar either way. Returns true when this page load is an
+ * OAuth redirect (successful or not) so the caller can reopen the sync UI.
+ */
+export const captureGoogleOAuthRedirect = (): boolean => {
+  if (typeof window === "undefined") return false;
+  const hash = window.location.hash.slice(1);
+  if (!hash.includes("access_token=") && !hash.includes("error=")) return false;
+
+  const params = new URLSearchParams(hash);
+  const expectedState = sessionStorage.getItem(OAUTH_STATE_KEY);
+  sessionStorage.removeItem(OAUTH_STATE_KEY);
+  window.history.replaceState(null, "", window.location.pathname + window.location.search);
+
+  const accessToken = params.get("access_token");
+  const returnedState = params.get("state");
+  if (!accessToken || !expectedState || returnedState !== expectedState) return true;
+
+  const expiresIn = parseInt(params.get("expires_in") ?? "3600", 10);
+  localStorage.setItem(TOKEN_KEY, accessToken);
+  localStorage.setItem(TOKEN_EXPIRY_KEY, (Date.now() + expiresIn * 1000).toString());
+  return true;
+};
+
 export function createGoogleDriveProvider(): TStorageProvider {
   let accessToken: string | null = null;
-  let tokenClient: google.accounts.oauth2.TokenClient | null = null;
   let lastSyncTime: Date | null = null;
 
   const storedToken = localStorage.getItem(TOKEN_KEY);
@@ -77,37 +91,31 @@ export function createGoogleDriveProvider(): TStorageProvider {
     isConnected: () => accessToken !== null,
 
     connect: () => {
-      if (!scriptsLoaded) {
-        return Promise.reject(new Error("Google scripts still loading. Please try again."));
-      }
+      const stateNonce = crypto.randomUUID();
+      sessionStorage.setItem(OAUTH_STATE_KEY, stateNonce);
 
-      return new Promise((resolve, reject) => {
-        tokenClient = google.accounts.oauth2.initTokenClient({
-          client_id: CLIENT_ID,
-          scope: SCOPES,
-          callback: (response) => {
-            if (response.error) {
-              reject(new Error(response.error));
-              return;
-            }
-            accessToken = response.access_token;
-            const expiryTime = Date.now() + response.expires_in * 1000;
-            localStorage.setItem(TOKEN_KEY, response.access_token);
-            localStorage.setItem(TOKEN_EXPIRY_KEY, expiryTime.toString());
-            gapi.client.setToken({ access_token: response.access_token });
-            resolve();
-          },
-          error_callback: (error) => {
-            reject(new Error(error.message || "Failed to open Google sign-in popup"));
-          },
-        });
-        tokenClient.requestAccessToken();
+      const params = new URLSearchParams({
+        client_id: CLIENT_ID,
+        redirect_uri: window.location.origin,
+        response_type: "token",
+        scope: SCOPES,
+        state: stateNonce,
+        prompt: "select_account",
       });
+      window.location.assign(`${AUTH_ENDPOINT}?${params.toString()}`);
+
+      // The page navigates away; this promise intentionally never settles.
+      return new Promise(() => {});
     },
 
     disconnect: () => {
       if (accessToken) {
-        google.accounts.oauth2.revoke(accessToken);
+        fetch(`${REVOKE_ENDPOINT}?token=${encodeURIComponent(accessToken)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        }).catch(() => {
+          // Best effort: clearing local state below is what disconnects the app.
+        });
       }
       accessToken = null;
       localStorage.removeItem(TOKEN_KEY);

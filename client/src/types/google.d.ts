@@ -1,24 +1,3 @@
-declare namespace google.accounts.oauth2 {
-  interface TokenClient {
-    requestAccessToken(): void;
-  }
-
-  interface TokenResponse {
-    access_token: string;
-    expires_in: number;
-    error?: string;
-  }
-
-  function initTokenClient(config: {
-    client_id: string;
-    scope: string;
-    callback: (response: TokenResponse) => void;
-    error_callback?: (error: { type: string; message: string }) => void;
-  }): TokenClient;
-
-  function revoke(token: string): void;
-}
-
 declare namespace gapi {
   function load(api: string, callback: () => void): void;
 

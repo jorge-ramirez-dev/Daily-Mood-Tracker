@@ -24,9 +24,14 @@ import { SettingsMenu } from "./components/SettingsMenu";
 import { ConfirmModal } from "./components/ConfirmModal";
 import { CloudSyncSettings } from "./components/CloudSyncSettings";
 import { useConfirmModal } from "./hooks/useConfirmModal";
+import { captureGoogleOAuthRedirect } from "./lib/storage/googleDrive";
 
 const ENTRIES_STORAGE_KEY = "mood-tracker.daily.entries";
 const CURRENT_YEAR = new Date().getFullYear();
+
+// Runs once per page load, before React renders: if Google just redirected
+// back with a token in the URL fragment, store it and reopen the sync panel.
+const RETURNED_FROM_OAUTH = captureGoogleOAuthRedirect();
 
 const App = () => {
   const [entries, setEntries] = useState<TEntriesMap>(() =>
@@ -37,7 +42,7 @@ const App = () => {
   const [selectedDateKey, setSelectedDateKey] = useState(todayKey);
   const [selectedYear, setSelectedYear] = useState(CURRENT_YEAR);
 
-  const [showSync, setShowSync] = useState(false);
+  const [showSync, setShowSync] = useState(RETURNED_FROM_OAUTH);
   const { modal, showConfirm, handleConfirm: handleModalConfirm, handleCancel: handleModalCancel } = useConfirmModal();
 
   useEffect(() => {
