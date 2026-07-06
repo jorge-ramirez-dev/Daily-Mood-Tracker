@@ -31,8 +31,11 @@ export function useCloudSync(localEntries: TEntriesMap) {
 
     setState((prev) => ({ ...prev, status: "syncing", error: null }));
     try {
-      await provider.connect();
+      // Persist the choice before connect(): providers authenticate via a
+      // full-page redirect, so code after the await never runs. The restore
+      // effect above re-adopts the provider once the redirect lands back.
       localStorage.setItem(PROVIDER_KEY, providerType);
+      await provider.connect();
       setState((prev) => ({ ...prev, provider, status: "synced" }));
     } catch (error) {
       setState((prev) => ({
