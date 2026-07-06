@@ -2,7 +2,7 @@ import { Dropbox, DropboxAuth } from "dropbox";
 import type { TStorageProvider } from "./types";
 import type { TEntriesMap } from "../../utils/types";
 
-const CLIENT_ID = import.meta.env.VITE_DROPBOX_CLIENT_ID as string;
+const CLIENT_ID = (import.meta.env.VITE_DROPBOX_CLIENT_ID as string)?.trim();
 const DATA_FILE_PATH = "/mood-tracker-data.json";
 
 const TOKEN_KEY = "mood-tracker.dropbox.token";
