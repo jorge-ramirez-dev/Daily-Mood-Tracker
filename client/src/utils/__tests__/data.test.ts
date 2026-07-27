@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { aggregateYearData, hasYearData, normalizeEntry, serializeEntry } from "../data";
+import { aggregateYearData, areEntriesEqual, hasYearData, normalizeEntry, serializeEntry } from "../data";
 import { StoredEntry } from "../types";
 
 test("normalizeEntry handles strings and split objects", () => {
@@ -97,6 +97,37 @@ test("serializeEntry preserves note field", () => {
     serializeEntry({ first: "Good", second: "Bad", note: null }),
     { first: "Good", second: "Bad" }
   );
+});
+
+test("areEntriesEqual treats equivalent formats as equal", () => {
+  // String vs object form of the same single mood.
+  assert.equal(areEntriesEqual("Great", { first: "Great" }), true);
+
+  // Legacy alias keys normalize to the same entry.
+  assert.equal(areEntriesEqual({ primary: "Good", secondary: "Bad" }, { first: "Good", second: "Bad" }), true);
+
+  // Identical note-bearing entries.
+  assert.equal(
+    areEntriesEqual({ first: "Okay", note: "abc" }, { first: "Okay", note: "abc" }),
+    true
+  );
+
+  // Two empty entries.
+  assert.equal(areEntriesEqual(null, null), true);
+});
+
+test("areEntriesEqual detects real differences", () => {
+  // Different note.
+  assert.equal(areEntriesEqual({ first: "Okay", note: "abc" }, { first: "Okay", note: "123" }), false);
+
+  // Different mood.
+  assert.equal(areEntriesEqual("Great", "Bad"), false);
+
+  // Note present on one side only.
+  assert.equal(areEntriesEqual({ first: "Good" }, { first: "Good", note: "hi" }), false);
+
+  // One side empty.
+  assert.equal(areEntriesEqual(null, "Good"), false);
 });
 
 test("aggregateYearData ignores note field", () => {

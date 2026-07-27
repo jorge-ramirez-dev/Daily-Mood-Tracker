@@ -1,7 +1,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { formatTodayLabel, getTodayKey, loadEntries, saveEntries } from "../appHelpers";
-import type { EntriesMap } from "../types";
+import {
+  applyEntryConflictResolution,
+  formatEntryForConflict,
+  formatTodayLabel,
+  getTodayKey,
+  loadEntries,
+  mergeEntries,
+  saveEntries,
+} from "../appHelpers";
+import type { TEntriesMap } from "../types";
 
 const createMockStorage = (initial: Record<string, string> = {}) => {
   const store = { ...initial };
@@ -27,34 +35,30 @@ test("formatTodayLabel formats using en-US long form", () => {
   assert.equal(label, "Thursday, October 10");
 });
 
-test("loadEntries falls back when storage empty or missing", () => {
-  const fallback: EntriesMap = { "2024-01-01": "Great" };
+test("loadEntries returns empty object when storage empty or missing", () => {
   const storage = createMockStorage();
-  const result = loadEntries(storage, "key", fallback);
-  assert.deepEqual(result, fallback);
+  assert.deepEqual(loadEntries(storage, "key"), {});
 
-  const noStorage = loadEntries(null, "key", fallback);
-  assert.deepEqual(noStorage, fallback);
+  assert.deepEqual(loadEntries(null, "key"), {});
 });
 
 test("loadEntries parses stored data when available", () => {
-  const fallback: EntriesMap = { "2024-01-01": "Great" };
-  const stored: EntriesMap = { "2024-02-01": "Good" };
+  const stored: TEntriesMap = { "2024-02-01": "Good" };
   const storage = createMockStorage({ key: JSON.stringify(stored) });
-  const result = loadEntries(storage, "key", fallback);
+  const result = loadEntries(storage, "key");
   assert.deepEqual(result, stored);
 });
 
 test("saveEntries writes JSON to storage", () => {
   const storage = createMockStorage();
-  const entries: EntriesMap = { "2024-03-02": { first: "Okay", second: "Good" } };
+  const entries: TEntriesMap = { "2024-03-02": { first: "Okay", second: "Good" } };
   saveEntries(storage, "entries", entries);
   assert.deepEqual(storage.dump(), { entries: JSON.stringify(entries) });
 });
 
 test("saveEntries and loadEntries handle note field", () => {
   const storage = createMockStorage();
-  const entries: EntriesMap = {
+  const entries: TEntriesMap = {
     "2024-03-02": {
       first: "Okay",
       second: "Good",
@@ -63,7 +67,7 @@ test("saveEntries and loadEntries handle note field", () => {
   };
 
   saveEntries(storage, "entries", entries);
-  const loaded = loadEntries(storage, "entries", {});
+  const loaded = loadEntries(storage, "entries");
 
   assert.deepEqual(loaded, entries);
   const entry = loaded["2024-03-02"];
@@ -72,4 +76,73 @@ test("saveEntries and loadEntries handle note field", () => {
   } else {
     assert.fail("Expected entry to have note field");
   }
+});
+
+test("mergeEntries skips identical entries without overwriting", () => {
+  const current: TEntriesMap = { "2024-01-01": { first: "Good", note: "abc" }, "2024-01-02": "Bad" };
+  const incoming: TEntriesMap = { "2024-01-01": { first: "Good", note: "abc" }, "2024-01-02": "Bad" };
+
+  const { mergedEntries, conflicts, stats } = mergeEntries(current, incoming);
+
+  assert.equal(conflicts.length, 0);
+  assert.deepEqual(stats, { added: 0, unchanged: 2, conflicts: 0 });
+  // The exact same object references are preserved — nothing was rewritten.
+  assert.equal(mergedEntries["2024-01-01"], current["2024-01-01"]);
+  assert.equal(mergedEntries["2024-01-02"], current["2024-01-02"]);
+});
+
+test("mergeEntries adds entries missing locally without prompting", () => {
+  const current: TEntriesMap = {};
+  const incoming: TEntriesMap = { "2024-01-01": { first: "Good", note: "abc" } };
+
+  const { mergedEntries, conflicts, stats } = mergeEntries(current, incoming);
+
+  assert.equal(conflicts.length, 0);
+  assert.deepEqual(stats, { added: 1, unchanged: 0, conflicts: 0 });
+  assert.deepEqual(mergedEntries["2024-01-01"], { first: "Good", note: "abc" });
+});
+
+test("mergeEntries surfaces a conflict when the note differs", () => {
+  const current: TEntriesMap = { "2024-01-01": { first: "Good", note: "abc" } };
+  const incoming: TEntriesMap = { "2024-01-01": { first: "Good", note: "123" } };
+
+  const { mergedEntries, conflicts, stats } = mergeEntries(current, incoming);
+
+  assert.equal(conflicts.length, 1);
+  assert.deepEqual(stats, { added: 0, unchanged: 0, conflicts: 1 });
+  assert.equal(conflicts[0].dateKey, "2024-01-01");
+  assert.deepEqual(conflicts[0].current, { first: "Good", second: null, note: "abc" });
+  assert.deepEqual(conflicts[0].incoming, { first: "Good", second: null, note: "123" });
+  // Local value is kept until the user resolves the conflict.
+  assert.deepEqual(mergedEntries["2024-01-01"], { first: "Good", note: "abc" });
+});
+
+test("mergeEntries surfaces a conflict when only the mood differs", () => {
+  const current: TEntriesMap = { "2024-01-01": "Good" };
+  const incoming: TEntriesMap = { "2024-01-01": "Bad" };
+
+  const { conflicts, stats } = mergeEntries(current, incoming);
+
+  assert.equal(conflicts.length, 1);
+  assert.equal(stats.conflicts, 1);
+});
+
+test("applyEntryConflictResolution replaces the whole entry with the incoming one", () => {
+  const entries: TEntriesMap = { "2024-01-01": { first: "Good", note: "abc" } };
+  const resolved = applyEntryConflictResolution(entries, "2024-01-01", {
+    first: "Bad",
+    second: null,
+    note: "123",
+  });
+
+  assert.deepEqual(resolved["2024-01-01"], { first: "Bad", note: "123" });
+  // Original object is not mutated.
+  assert.deepEqual(entries["2024-01-01"], { first: "Good", note: "abc" });
+});
+
+test("formatEntryForConflict renders moods and note", () => {
+  assert.equal(formatEntryForConflict({ first: "Good", second: null, note: "abc" }), 'Good — "abc"');
+  assert.equal(formatEntryForConflict({ first: "Good", second: "Bad", note: null }), "Good + Bad");
+  assert.equal(formatEntryForConflict({ first: null, second: null, note: "note only" }), 'No mood — "note only"');
+  assert.equal(formatEntryForConflict(null), "(empty)");
 });
