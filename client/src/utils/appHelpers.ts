@@ -1,5 +1,5 @@
-import type { TEntriesMap } from "./types";
-import { normalizeEntry, serializeEntry } from "./data";
+import type { TEntriesMap, TNormalizedEntry } from "./types";
+import { areEntriesEqual, normalizeEntry, serializeEntry } from "./data";
 
 export const getTodayKey = (date: Date = new Date()): string => {
   const timezoneOffset = date.getTimezoneOffset() * 60000;
@@ -72,15 +72,22 @@ export const downloadBackup = (data: TBackupData): void => {
   URL.revokeObjectURL(url);
 };
 
-export type TNoteConflict = {
+export type TEntryConflict = {
   dateKey: string;
-  currentNote: string;
-  incomingNote: string;
+  current: TNormalizedEntry;
+  incoming: TNormalizedEntry;
+};
+
+export type TMergeStats = {
+  added: number;
+  unchanged: number;
+  conflicts: number;
 };
 
 export type TMergeResult = {
   mergedEntries: TEntriesMap;
-  noteConflicts: TNoteConflict[];
+  conflicts: TEntryConflict[];
+  stats: TMergeStats;
 };
 
 export const parseBackupFile = async (file: File): Promise<TBackupData> => {
@@ -99,8 +106,9 @@ export const parseBackupFile = async (file: File): Promise<TBackupData> => {
 };
 
 export const mergeEntries = (currentEntries: TEntriesMap, incomingEntries: TEntriesMap): TMergeResult => {
-  const noteConflicts: TNoteConflict[] = [];
+  const conflicts: TEntryConflict[] = [];
   const mergedEntries = { ...currentEntries };
+  const stats: TMergeStats = { added: 0, unchanged: 0, conflicts: 0 };
 
   for (const dateKey of Object.keys(incomingEntries)) {
     const incomingRaw = incomingEntries[dateKey];
@@ -111,50 +119,54 @@ export const mergeEntries = (currentEntries: TEntriesMap, incomingEntries: TEntr
     const currentRaw = mergedEntries[dateKey];
     const currentNormalized = normalizeEntry(currentRaw);
 
-    let finalNote: string | null = currentNormalized?.note ?? null;
-    const incomingNote = incomingNormalized.note;
-
-    if (incomingNote) {
-      if (!finalNote) {
-        finalNote = incomingNote;
-      } else if (finalNote !== incomingNote) {
-        noteConflicts.push({
-          dateKey,
-          currentNote: finalNote,
-          incomingNote,
-        });
+    // No local entry for this day — nothing to decide, adopt the incoming one.
+    if (!currentNormalized?.first && !currentNormalized?.note) {
+      const added = serializeEntry({
+        first: incomingNormalized.first,
+        second: incomingNormalized.second,
+        note: incomingNormalized.note,
+      });
+      if (added) {
+        mergedEntries[dateKey] = added;
+        stats.added += 1;
       }
+      continue;
     }
 
-    const merged = serializeEntry({
-      first: incomingNormalized.first,
-      second: incomingNormalized.second,
-      note: finalNote,
-    });
-
-    if (merged) {
-      mergedEntries[dateKey] = merged;
+    // Identical entry — skip the unnecessary overwrite.
+    if (areEntriesEqual(currentRaw, incomingRaw)) {
+      stats.unchanged += 1;
+      continue;
     }
+
+    // Real difference (mood or note) — let the user decide, keep local for now.
+    conflicts.push({ dateKey, current: currentNormalized, incoming: incomingNormalized });
+    stats.conflicts += 1;
   }
 
-  return { mergedEntries, noteConflicts };
+  return { mergedEntries, conflicts, stats };
 };
 
-export const applyNoteConflictResolution = (
+export const applyEntryConflictResolution = (
   entries: TEntriesMap,
   dateKey: string,
-  newNote: string
+  incoming: TNormalizedEntry
 ): TEntriesMap => {
-  const currentEntry = normalizeEntry(entries[dateKey]);
-  if (!currentEntry) return entries;
-
   const updated = serializeEntry({
-    first: currentEntry.first,
-    second: currentEntry.second,
-    note: newNote,
+    first: incoming?.first ?? null,
+    second: incoming?.second ?? null,
+    note: incoming?.note ?? null,
   });
 
   if (!updated) return entries;
 
   return { ...entries, [dateKey]: updated };
+};
+
+export const formatEntryForConflict = (entry: TNormalizedEntry): string => {
+  if (!entry) return "(empty)";
+
+  const moods = [entry.first, entry.second].filter(Boolean).join(" + ");
+  const moodLabel = moods || "No mood";
+  return entry.note ? `${moodLabel} — "${entry.note}"` : moodLabel;
 };
