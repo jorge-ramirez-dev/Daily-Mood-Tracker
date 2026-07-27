@@ -5,7 +5,7 @@ import { ConfirmModal } from "./ConfirmModal";
 import type { TEntriesMap } from "../utils/types";
 import type { TSyncStatus } from "../lib/storage/types";
 import { preloadGoogleScripts } from "../lib/storage/googleDrive";
-import { applyNoteConflictResolution, mergeEntries } from "../utils/appHelpers";
+import { applyEntryConflictResolution, formatEntryForConflict, mergeEntries } from "../utils/appHelpers";
 
 type TProps = {
   entries: TEntriesMap;
@@ -27,27 +27,32 @@ export function CloudSyncSettings({ entries, setEntries }: TProps) {
 
     const confirmRestore = await showConfirm(
       "Restore from Drive",
-      `Merge ${Object.keys(remoteEntries).length} entries from Google Drive with your current data?`,
+      `Merge ${Object.keys(remoteEntries).length} entries from Google Drive with your current data? Identical entries are left untouched.`,
       "Continue",
       "Cancel"
     );
     if (!confirmRestore) return;
 
-    let { mergedEntries, noteConflicts } = mergeEntries(entries, remoteEntries);
+    let { mergedEntries, conflicts, stats } = mergeEntries(entries, remoteEntries);
 
-    for (const conflict of noteConflicts) {
+    for (const conflict of conflicts) {
       const shouldOverwrite = await showConfirm(
-        "Note Conflict",
-        `Conflict on ${conflict.dateKey}:\n\nCurrent note:\n"${conflict.currentNote}"\n\nIncoming note:\n"${conflict.incomingNote}"`,
+        "Entry Conflict",
+        `Conflict on ${conflict.dateKey}:\n\nCurrent:\n${formatEntryForConflict(conflict.current)}\n\nIncoming:\n${formatEntryForConflict(conflict.incoming)}`,
         "Use Incoming",
         "Keep Current"
       );
       if (shouldOverwrite) {
-        mergedEntries = applyNoteConflictResolution(mergedEntries, conflict.dateKey, conflict.incomingNote);
+        mergedEntries = applyEntryConflictResolution(mergedEntries, conflict.dateKey, conflict.incoming);
       }
     }
 
     setEntries(mergedEntries);
+    await showConfirm(
+      "Restore Complete",
+      `${stats.added} new, ${stats.unchanged} unchanged, ${stats.conflicts} reviewed.`,
+      "OK"
+    );
   };
 
   return (
