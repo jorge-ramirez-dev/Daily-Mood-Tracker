@@ -38,6 +38,18 @@ export const normalizeEntry = (value: TStoredEntry): TNormalizedEntry => {
   return null;
 };
 
+export const areEntriesEqual = (a: TStoredEntry, b: TStoredEntry): boolean => {
+  const normalizedA = normalizeEntry(a);
+  const normalizedB = normalizeEntry(b);
+  if (!normalizedA && !normalizedB) return true;
+  if (!normalizedA || !normalizedB) return false;
+  return (
+    normalizedA.first === normalizedB.first &&
+    normalizedA.second === normalizedB.second &&
+    normalizedA.note === normalizedB.note
+  );
+};
+
 export const serializeEntry = ({ first, second, note }: { first: TMoodKey | null; second: TMoodKey | null; note: string | null }): TStoredEntry => {
   if (!first && !note) return null;
 

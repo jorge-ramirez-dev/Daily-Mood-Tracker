@@ -7,7 +7,8 @@ import { DailyMoodSelector } from "./components/DailyMoodSelector";
 import { OverviewPanel } from "./components/OverviewPanel";
 import { YearSelector } from "./components/YearSelector";
 import {
-  applyNoteConflictResolution,
+  applyEntryConflictResolution,
+  formatEntryForConflict,
   createBackupData,
   downloadBackup,
   formatTodayLabel,
@@ -186,25 +187,25 @@ const App = () => {
 
         const confirmRestore = await showConfirm(
           "Import Data",
-          `This will merge ${incomingCount} entries with your current data. Moods will be updated, notes will be preserved unless you choose to overwrite.`,
+          `This will merge ${incomingCount} entries with your current data. Identical entries are skipped; differing days are shown for you to resolve.`,
           "Continue",
           "Cancel"
         );
 
         if (!confirmRestore) return;
 
-        let { mergedEntries, noteConflicts } = mergeEntries(entries, backupData.entries);
+        let { mergedEntries, conflicts, stats } = mergeEntries(entries, backupData.entries);
 
-        for (const conflict of noteConflicts) {
+        for (const conflict of conflicts) {
           const shouldOverwrite = await showConfirm(
-            "Note Conflict",
-            `Conflict on ${conflict.dateKey}:\n\nCurrent note:\n"${conflict.currentNote}"\n\nIncoming note:\n"${conflict.incomingNote}"`,
+            "Entry Conflict",
+            `Conflict on ${conflict.dateKey}:\n\nCurrent:\n${formatEntryForConflict(conflict.current)}\n\nIncoming:\n${formatEntryForConflict(conflict.incoming)}`,
             "Use Incoming",
             "Keep Current"
           );
 
           if (shouldOverwrite) {
-            mergedEntries = applyNoteConflictResolution(mergedEntries, conflict.dateKey, conflict.incomingNote);
+            mergedEntries = applyEntryConflictResolution(mergedEntries, conflict.dateKey, conflict.incoming);
           }
         }
 
@@ -215,7 +216,11 @@ const App = () => {
         setEntries(mergedEntries);
         setSelectedYear(CURRENT_YEAR);
         setSelectedDateKey(todayKey);
-        await showConfirm("Success", "Data merged successfully!", "OK");
+        await showConfirm(
+          "Success",
+          `Data merged: ${stats.added} new, ${stats.unchanged} unchanged, ${stats.conflicts} reviewed.`,
+          "OK"
+        );
       } catch (error) {
         await showConfirm("Error", `Failed to restore backup: ${error instanceof Error ? error.message : "Unknown error"}`, "OK");
       } finally {
