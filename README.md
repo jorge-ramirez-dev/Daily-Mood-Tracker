@@ -74,6 +74,7 @@ Sync mood data across devices using your own cloud storage. Data is written dire
 Ask questions about your mood data in natural language, powered by an LLM **you** connect with your own API key. Like Cloud Sync, nothing routes through our servers — your browser calls your chosen provider directly.
 
 - **Bring your own key** — Choose Claude (Anthropic), OpenAI, or Gemini and paste your own API key. The key and settings live only in your browser's localStorage; they are never sent anywhere but the provider you pick.
+- **Custom OpenAI-compatible endpoint** — With the OpenAI provider selected, set an optional base URL to point at any OpenAI-compatible API (Groq, OpenRouter, Mistral…) for a free or cheaper key. Leave it blank to use OpenAI itself.
 - **Model choice** — Pick a model per provider, defaulting to a low-cost one (Claude Haiku, GPT-4o mini, Gemini Flash) so casual use stays cheap; switch up for deeper analysis.
 - **Aggregates by default, notes opt-in** — By default only a compact statistical summary of your moods (counts, trends, best/toughest month) is sent — never raw entries. Your written daily notes are shared only if you explicitly turn that on.
 - **Consent gate** — A required, destination-specific consent checkbox (with a link to the provider's privacy/retention policy) must be accepted before any question can be sent.

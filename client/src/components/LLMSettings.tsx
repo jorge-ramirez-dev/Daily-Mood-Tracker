@@ -11,6 +11,19 @@ const WARN_DEFAULT = 20;
 export const LLMSettings = ({ config, onUpdateConfig }: TProps) => {
   const catalog = LLM_CATALOG[config.provider];
   const isModelInCatalog = catalog.models.some((option) => option.id === config.model);
+  const supportsCustomEndpoint = config.provider === "openai";
+
+  // When an OpenAI-compatible endpoint override is set, the real destination is
+  // that host — reflect it in the key prompt and consent notice, not "OpenAI".
+  const customHost = (() => {
+    if (!supportsCustomEndpoint || !config.baseUrl) return null;
+    try {
+      return new URL(config.baseUrl).host;
+    } catch {
+      return null;
+    }
+  })();
+  const destinationName = customHost ?? catalog.displayName;
 
   const handleProviderChange = (provider: TLLMProviderName) => {
     // Switching provider resets the model to that provider's cheap default and
@@ -72,6 +85,24 @@ export const LLMSettings = ({ config, onUpdateConfig }: TProps) => {
         />
       </label>
 
+      {supportsCustomEndpoint && (
+        <label className="llm-settings__field">
+          <span className="llm-settings__label">Custom endpoint (optional)</span>
+          <input
+            className="llm-settings__control"
+            type="text"
+            value={config.baseUrl ?? ""}
+            placeholder="https://api.groq.com/openai/v1"
+            // Changing destination re-arms consent, which is destination-specific.
+            onChange={(event) => onUpdateConfig({ baseUrl: event.target.value, consented: false })}
+          />
+          <span className="llm-settings__caution">
+            Point at any OpenAI-compatible API (Groq, OpenRouter, Mistral…) for a free or cheaper
+            key. Leave blank for OpenAI. Set a matching model above.
+          </span>
+        </label>
+      )}
+
       <label className="llm-settings__field">
         <span className="llm-settings__label">API key</span>
         <input
@@ -79,7 +110,7 @@ export const LLMSettings = ({ config, onUpdateConfig }: TProps) => {
           type="password"
           autoComplete="off"
           value={config.apiKey}
-          placeholder={`Your ${catalog.displayName} API key`}
+          placeholder={`Your ${destinationName} API key`}
           onChange={(event) => onUpdateConfig({ apiKey: event.target.value })}
         />
       </label>
@@ -145,11 +176,15 @@ export const LLMSettings = ({ config, onUpdateConfig }: TProps) => {
           onChange={(event) => onUpdateConfig({ consented: event.target.checked })}
         />
         <span>
-          I understand my selected mood data will be sent to {catalog.displayName} using my own API
-          key, subject to their{" "}
-          <a href={catalog.policyUrl} target="_blank" rel="noreferrer">
-            privacy and data-retention terms
-          </a>
+          I understand my selected mood data will be sent to {destinationName} using my own API key,
+          subject to their{" "}
+          {customHost ? (
+            "privacy and data-retention terms"
+          ) : (
+            <a href={catalog.policyUrl} target="_blank" rel="noreferrer">
+              privacy and data-retention terms
+            </a>
+          )}
           .
         </span>
       </label>

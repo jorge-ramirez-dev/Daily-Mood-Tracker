@@ -91,6 +91,7 @@ export const useAskAI = (entries: TEntriesMap) => {
       await getProvider(config.provider).sendChat({
         apiKey: config.apiKey,
         model: config.model,
+        baseUrl: config.baseUrl,
         system,
         messages: windowed,
         signal: controller.signal,
