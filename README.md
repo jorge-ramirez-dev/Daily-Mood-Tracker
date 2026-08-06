@@ -69,6 +69,19 @@ Sync mood data across devices using your own cloud storage. Data is written dire
 - **Status indicators** — Real-time badge showing sync state: Idle, Syncing, Synced, or Error, along with last sync timestamp.
 - **Connect/Disconnect** — Connect to a provider from the Cloud Sync panel in settings. Disconnect at any time to revoke access and clear stored tokens.
 
+### Ask AI (BYOK — Bring Your Own Key)
+
+Ask questions about your mood data in natural language, powered by an LLM **you** connect with your own API key. Like Cloud Sync, nothing routes through our servers — your browser calls your chosen provider directly.
+
+- **Bring your own key** — Choose Claude (Anthropic), OpenAI, or Gemini and paste your own API key. The key and settings live only in your browser's localStorage; they are never sent anywhere but the provider you pick.
+- **Custom OpenAI-compatible endpoint** — With the OpenAI provider selected, set an optional base URL to point at any OpenAI-compatible API (Groq, OpenRouter, Mistral…) for a free or cheaper key. Leave it blank to use OpenAI itself.
+- **Model choice** — Pick a model per provider, defaulting to a low-cost one (Claude Haiku, GPT-4o mini, Gemini Flash) so casual use stays cheap; switch up for deeper analysis.
+- **Aggregates by default, notes opt-in** — By default only a compact statistical summary of your moods (counts, trends, best/toughest month) is sent — never raw entries. Your written daily notes are shared only if you explicitly turn that on.
+- **Consent gate** — A required, destination-specific consent checkbox (with a link to the provider's privacy/retention policy) must be accepted before any question can be sent.
+- **Prompt suggestions** — Pre-filled starter prompts ("What patterns do you see this year?", "Which days am I happiest?") to get going quickly, plus free-form multi-turn chat.
+- **Cost transparency** — A live session token readout, a configurable history window, and an optional "warn me after N messages" soft threshold. Because it's your key, the design favors visibility over hard caps — the only hard stop is a safety abort for a runaway response.
+- **Access** — A floating ✦ launcher (and an optional Settings menu entry) opens an overlay panel on top of the home screen, keeping the main page uncluttered. The feature is gated behind the `VITE_ENABLE_ASK_AI` env flag.
+
 ### UI & Accessibility
 
 - **Dark mode** — Automatically follows system preference via `prefers-color-scheme: dark`. All components, badges, and grid cells adapt their colors for dark backgrounds.
@@ -116,6 +129,17 @@ To enable Google Drive sync:
 cp client/.env.example client/.env
 # Edit .env and set VITE_GOOGLE_CLIENT_ID
 ```
+
+### Ask AI Setup (optional)
+
+Ask AI is a dark-launched feature, hidden by default. To enable the launcher and menu entry, set the flag in `client/.env`:
+
+```bash
+# Edit client/.env
+VITE_ENABLE_ASK_AI=true
+```
+
+No API keys go in `.env` — each user enters their own provider key in the app's Ask AI settings, stored only in their browser.
 
 ## Scripts
 

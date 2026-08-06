@@ -6,6 +6,9 @@ export type TLLMConfig = {
   provider: TLLMProviderName;
   model: string;
   apiKey: string;
+  // Optional OpenAI-compatible endpoint override (e.g. Groq, OpenRouter,
+  // Mistral). Empty/undefined = the provider's own default endpoint.
+  baseUrl?: string;
   includeNotes: boolean;
   consented: boolean;
   // Bounds how many prior turns are sent per request (caps token growth in long chats).
@@ -30,6 +33,7 @@ export type TLLMProvider = {
   sendChat: (args: {
     apiKey: string;
     model: string;
+    baseUrl?: string;
     system: string;
     messages: TChatMessage[];
     signal: AbortSignal;

@@ -1,8 +1,15 @@
 import type { TChatMessage, TLLMProvider, TStreamHandlers } from "./types";
 import { describeHttpError, readSSE } from "./sse";
 
-const ENDPOINT = "https://api.openai.com/v1/chat/completions";
+const DEFAULT_BASE_URL = "https://api.openai.com/v1";
 const DONE_SENTINEL = "[DONE]";
+
+// OpenAI-compatible providers (Groq, OpenRouter, Mistral, …) expose the same
+// `{base}/chat/completions` route, so a base-URL swap is all that's needed.
+const resolveEndpoint = (baseUrl?: string): string => {
+  const base = (baseUrl?.trim() || DEFAULT_BASE_URL).replace(/\/+$/, "");
+  return `${base}/chat/completions`;
+};
 
 type TOpenAIEvent = {
   choices?: { delta?: { content?: string } }[];
@@ -33,14 +40,14 @@ const handleEvent = (data: string, handlers: TStreamHandlers): void => {
 export const openaiProvider: TLLMProvider = {
   name: "openai",
   displayName: "OpenAI",
-  sendChat: async ({ apiKey, model, system, messages, signal, handlers }) => {
+  sendChat: async ({ apiKey, model, baseUrl, system, messages, signal, handlers }) => {
     const payloadMessages: { role: string; content: string }[] = [
       { role: "system", content: system },
       ...messages.map((message: TChatMessage) => ({ role: message.role, content: message.content })),
     ];
 
     try {
-      const response = await fetch(ENDPOINT, {
+      const response = await fetch(resolveEndpoint(baseUrl), {
         method: "POST",
         signal,
         headers: {

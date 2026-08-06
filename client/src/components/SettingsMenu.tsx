@@ -1,15 +1,16 @@
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
-import { List, FloppyDisk, ClockClockwise, Fire, Cloud } from "@phosphor-icons/react";
+import { List, FloppyDisk, ClockClockwise, Fire, Cloud, Sparkle } from "@phosphor-icons/react";
 
-type TSettingsMenuProps = {
+type TProps = {
   onBackup: () => void;
   onRestore: () => void;
   onClear: () => void;
   onToggleSync: () => void;
+  onToggleAskAI?: () => void;
   entryCount: number;
 };
 
-export const SettingsMenu = ({ onBackup, onRestore, onClear, onToggleSync, entryCount }: TSettingsMenuProps) => {
+export const SettingsMenu = ({ onBackup, onRestore, onClear, onToggleSync, onToggleAskAI, entryCount }: TProps) => {
   const handleClear = () => {
     const confirmed = window.confirm(
       `Are you sure? This will delete ${entryCount} ${entryCount === 1 ? "entry" : "entries"}.`
@@ -39,6 +40,21 @@ export const SettingsMenu = ({ onBackup, onRestore, onClear, onToggleSync, entry
             </button>
           )}
         </MenuItem>
+
+        {onToggleAskAI && (
+          <MenuItem>
+            {({ focus }) => (
+              <button
+                type="button"
+                className={`settings-menu__item ${focus ? "settings-menu__item--active" : ""}`}
+                onClick={onToggleAskAI}
+              >
+                <Sparkle weight="bold" />
+                <span>Ask AI</span>
+              </button>
+            )}
+          </MenuItem>
+        )}
 
         <div className="settings-menu__separator" />
 
