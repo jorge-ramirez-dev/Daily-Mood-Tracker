@@ -1126,3 +1126,134 @@
     box-shadow: 0 8px 20px rgba(2, 6, 23, 0.5);
   }
 }
+
+/* ── Ask AI: LLM settings ──────────────────────── */
+
+.llm-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.llm-settings__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.llm-settings__description {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.llm-settings__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.llm-settings__field--inline {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.llm-settings__label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.llm-settings__control {
+  padding: 0.5rem 0.75rem;
+  background: var(--surface-muted);
+  border: 1px solid var(--surface-border);
+  border-radius: 0.625rem;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+.llm-settings__control:focus {
+  outline: none;
+  border-color: var(--surface-border-strong);
+}
+
+.llm-settings__control--number {
+  width: 5rem;
+  text-align: center;
+}
+
+.llm-settings__checkbox,
+.llm-settings__consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.llm-settings__checkbox input,
+.llm-settings__consent input {
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+}
+
+.llm-settings__caution {
+  color: #b45309;
+  font-style: italic;
+}
+
+.llm-settings__knobs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.875rem;
+  background: var(--surface-subtle);
+  border-radius: 0.75rem;
+}
+
+.llm-settings__consent {
+  padding: 0.875rem;
+  background: var(--surface-subtle);
+  border-radius: 0.75rem;
+}
+
+.llm-settings__consent a {
+  color: var(--text-soft);
+  text-decoration: underline;
+}
+
+.llm-settings__gate {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #b45309;
+}
+
+.llm-settings__clear {
+  align-self: flex-start;
+  padding: 0.4rem 0.9rem;
+  background: transparent;
+  border: 1px solid var(--surface-border);
+  border-radius: 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.llm-settings__clear:hover {
+  background: var(--surface-subtle);
+}
+
+@media (prefers-color-scheme: dark) {
+  .llm-settings__caution,
+  .llm-settings__gate {
+    color: #fbbf24;
+  }
+}
