@@ -108,9 +108,36 @@ Highest-priority items before launching with EU users:
 
 ---
 
+## BYOK LLM Insights ("Ask AI")
+
+The **Ask AI** feature applies the same controller-avoidance reasoning to LLM analysis. Instead of proxying mood data through a server to an LLM (which would make you a data controller, and the LLM vendor your processor, for Article 9 data), the browser calls the user's **own** LLM provider directly with the user's **own** API key — **Bring Your Own Key (BYOK)**, mirroring BYOS.
+
+### How it works under GDPR
+
+- The user supplies their own API key for Claude, OpenAI, or Gemini. The key and config live only in the user's `localStorage`.
+- Mood data is sent from the user's browser **directly to the provider the user chose**. It never touches our servers — there is no server call in this path at all.
+- The user, using their own account, is the one initiating processing with a provider **they** selected and **they** have terms with.
+
+### Guardrails built into the feature
+
+| Guardrail | Purpose |
+|-----------|---------|
+| **Off by default** (dark-launched behind an env flag) + opt-in | No processing without deliberate activation |
+| **Explicit, destination-specific consent gate** | User acknowledges data goes to the named provider under that provider's terms before any request |
+| **Aggregates by default; raw notes opt-in** | Data minimisation — only a compact statistical summary is sent unless the user explicitly shares notes |
+| **Key + config client-side only** | No credential or mood data reaches our infrastructure |
+| **Link to the provider's privacy/retention policy** | Transparency about the downstream controller |
+
+### Remaining obligations
+
+- The **Privacy Policy** should note that if a user enables Ask AI, mood data (and notes, if opted in) is transmitted from their device to the third-party LLM provider they configured, under that provider's terms — and that this is user-initiated and off by default.
+- As with BYOS, we take on no new data-controller obligations for the mood data itself, because we never receive or process it server-side.
+
+---
+
 ## Decision
 
-**Go with BYOS.** It achieves the primary product goal (cross-device sync) while keeping you out of the role of data controller for sensitive mood data.
+**Go with BYOS.** It achieves the primary product goal (cross-device sync) while keeping you out of the role of data controller for sensitive mood data. The **BYOK Ask AI** feature extends the same principle to AI insights.
 
 ### BYOS implementation tasks
 

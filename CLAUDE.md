@@ -13,7 +13,7 @@ This is a **transitional monorepo** with two separate applications:
 - **Root level**: Next.js backend (in development) - authentication, database, API routes
 - **`client/` directory**: Vite + React SPA (production) - the current deployed frontend
 
-The client app uses localStorage for data persistence, with planned cloud sync to user-owned storage (see `BYOS_IMPLEMENTATION.md`).
+The client app uses localStorage for data persistence, with cloud sync to user-owned storage (Google Drive) already implemented. See `GDPR_ANALYSIS.md` for the BYOS/BYOK privacy reasoning.
 
 ### Key Data Flow
 - Mood entries stored in localStorage key: `mood-tracker.daily.entries`
