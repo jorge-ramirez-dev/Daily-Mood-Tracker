@@ -24,11 +24,17 @@ import { parseDateKey } from "./utils/dateHelpers";
 import { SettingsMenu } from "./components/SettingsMenu";
 import { ConfirmModal } from "./components/ConfirmModal";
 import { CloudSyncSettings } from "./components/CloudSyncSettings";
+import { AskAILauncher } from "./components/AskAILauncher";
+import { AskAIPanel } from "./components/AskAIPanel";
 import { useConfirmModal } from "./hooks/useConfirmModal";
 import { captureGoogleOAuthRedirect } from "./lib/storage/googleDrive";
 
 const ENTRIES_STORAGE_KEY = "mood-tracker.daily.entries";
 const CURRENT_YEAR = new Date().getFullYear();
+
+// Dark-launch switch: the Ask AI feature only appears when explicitly enabled,
+// so PR wiring can ship to main and be flipped on later via env config.
+const ASK_AI_ENABLED = import.meta.env.VITE_ENABLE_ASK_AI === "true";
 
 // Runs once per page load, before React renders: if Google just redirected
 // back with a token in the URL fragment, store it and reopen the sync panel.
@@ -44,6 +50,7 @@ const App = () => {
   const [selectedYear, setSelectedYear] = useState(CURRENT_YEAR);
 
   const [showSync, setShowSync] = useState(RETURNED_FROM_OAUTH);
+  const [showAskAI, setShowAskAI] = useState(false);
   const { modal, showConfirm, handleConfirm: handleModalConfirm, handleCancel: handleModalCancel } = useConfirmModal();
 
   useEffect(() => {
@@ -254,6 +261,7 @@ const App = () => {
         onRestore={handleRestore}
         onClear={handleClear}
         onToggleSync={() => setShowSync((prev) => !prev)}
+        onToggleAskAI={ASK_AI_ENABLED ? () => setShowAskAI((prev) => !prev) : undefined}
         entryCount={Object.keys(entries).length}
       />
 
@@ -297,6 +305,13 @@ const App = () => {
           />
         )}
       </div>
+
+      {ASK_AI_ENABLED && (
+        <>
+          <AskAILauncher onOpen={() => setShowAskAI(true)} hidden={showAskAI} />
+          <AskAIPanel entries={entries} isOpen={showAskAI} onClose={() => setShowAskAI(false)} />
+        </>
+      )}
     </div>
   );
 };
